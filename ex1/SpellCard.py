@@ -1,35 +1,34 @@
-from  ex0.Card import Card
+from ex0.Card import Card
 
-class Spellcard(Card):
 
-    effect_types:list [str] = ["damage", "heal", "buff", "debuff"]
+class SpellCard(Card):
 
-    def __int__(self, name: str, cost: int, rarity: str, effect_type: str):
-        super().__init__(name = name, cost=cost, rarity=rarity)
-        if effect_type not in Spellcard.effect_types:
-            print("ERROR: Wrong effect_type")
+    effect_types: dict[str, str] = {
+            "damage": "Deal 3 damage to target", 
+            "heal": "Restore 3 health",
+            "buff": "Increase attack by 2",
+            "debuff": "Reduce enemy attack by 2"}
 
-        self.effect_type: str = effect_type  #damage, heal, buff, debuf
+    def __init__(self, name: str, cost: int, rarity: str, effect_type: str):
+        super().__init__(name=name, cost=cost, rarity=rarity)
 
-    
+        if effect_type not in self.effect_types:
+            raise ValueError("ERROR: Wrong effect_type")
+        self.effect_type: str = effect_type
+
     def play(self, game_state: dict) -> dict:
-        result:dict = {
-            "effect_type": "spell",
-            "consumeble": True,
-            }
+        result: dict
+        if self.is_playable(game_state["available_mana"]):
+            result = self.resolve_effect(game_state["targets"])
+            result["card_played"] = self.name
+            result["mana_used"] = self.cost
+            game_state["available_mana"] -= self.cost
+        else:
+            result = {"error": "Not enough mana."}
+        return result
 
     def resolve_effect(self, targets: list) -> dict:
-
-Método play(game_state):
-    crear diccionario resultado
-    indicar que es un spell
-    indicar que se consume
-    devolver resultado
-
-Método resolve_effect(targets):
-    según effect_type:
-        si damage → aplicar daño
-        si heal → aplicar curación
-        si buff → aplicar mejora
-        si debuff → aplicar penalización
-    devolver diccionario con resultado
+        return {
+                "effect_type": self.effect_type,
+                "targets": targets,
+                "effect": self.effect_types[self.effect_type]}
