@@ -17,7 +17,6 @@ class SpellCard(Card):
         self.effect_type: str = effect_type
 
     def play(self, game_state: dict) -> dict:
-        result: dict
         if self.is_playable(game_state["available_mana"]):
             result = self.resolve_effect(game_state["targets"])
             result["card_played"] = self.name
