@@ -1,4 +1,3 @@
-from ex0.Card import Card
 from abc import ABC, abstractmethod
 
 
@@ -10,10 +9,10 @@ class Combatable(ABC):
     @abstractmethod
     def attack(self, target) -> dict:
         """The PDF says attack(self, target) -> dict:
-        and also says 
+        and also says:
         • Use type hints for all function signatures and class methods.
         and, in the example, they appear to use .name when printing attack
-        """ 
+        """
         ...
 
     @abstractmethod

@@ -1,14 +1,28 @@
 from ex3.GameStrategy import GameStrategy
+from ex0.CreatureCard import CreatureCard
+from ex1.SpellCard import SpellCard
+from ex0.Card import Card
+from typing import Any
 
 
 class AggressiveStrategy(GameStrategy):
 
-    def execute_turn(self, hand: list, battlefield: list) -> dict:
+    def __init__(self) -> None:
+        self.name = "AggressiveStrategy"
+
+    def execute_turn(
+        self,
+        hand: list[Card],
+        battlefield: list[str]
+    ) -> dict[str, Any]:
 
         mana_limit = 5
         mana_used = 0
-        cards_played = []
+        cards_played: list[str] = []
         damage_dealt = 0
+
+        # Use battlefield through strategy logic
+        targets_attacked = self.prioritize_targets(battlefield)
 
         # Play lowest cost first
         sorted_hand = sorted(hand, key=lambda c: c.cost)
@@ -18,21 +32,22 @@ class AggressiveStrategy(GameStrategy):
                 cards_played.append(card.name)
                 mana_used += card.cost
 
-                # Simple damage logic
-                if hasattr(card, "attack"):
-                    damage_dealt += getattr(card, "attack", 0)
-                else:
-                    damage_dealt += 3
+                if isinstance(card, CreatureCard):
+                    damage_dealt += card.attack
+                elif isinstance(card, SpellCard):
+                    damage_dealt += card.cost
 
         return {
             "cards_played": cards_played,
             "mana_used": mana_used,
-            "targets_attacked": ["Enemy Player"],
+            "targets_attacked": targets_attacked,
             "damage_dealt": damage_dealt
         }
 
     def get_strategy_name(self) -> str:
-        return "AggressiveStrategy"
+        return self.name
 
-    def prioritize_targets(self, available_targets: list) -> list:
-        return available_targets
+    def prioritize_targets(self, available_targets: list[str]) -> list[str]:
+        # Aggressive strategy: attack any target containing "Enemy"
+        # I don't know the actual battlefield content.
+        return [t for t in available_targets if "Enemy" in t]

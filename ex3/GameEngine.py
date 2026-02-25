@@ -5,25 +5,26 @@ from ex3.GameStrategy import GameStrategy
 class GameEngine:
 
     def __init__(self) -> None:
-        self.factory = None
-        self.strategy = None
         self.turns_simulated = 0
         self.total_damage = 0
         self.cards_created = 0
 
     def configure_engine(self, factory: CardFactory,
                          strategy: GameStrategy) -> None:
-        self.factory = factory
-        self.strategy = strategy
+        self.factory: CardFactory = factory
+        self.strategy: GameStrategy = strategy
+
+    def setup_game(self, deck_size: int) -> None:
+        themed = self.factory.create_themed_deck(deck_size)
+        self.hand = themed["deck"]
+        self.cards_created = len(self.hand)
 
     def simulate_turn(self) -> dict:
 
-        themed = self.factory.create_themed_deck(3)
-        hand = themed["deck"]
+        hand_str = ", ".join(f"{c.name} ({c.cost})" for c in self.hand)
+        print(f"Hand: [{hand_str}]")
 
-        self.cards_created = len(hand)
-
-        result = self.strategy.execute_turn(hand, [])
+        result = self.strategy.execute_turn(self.hand, [])
 
         self.turns_simulated += 1
         self.total_damage += result["damage_dealt"]

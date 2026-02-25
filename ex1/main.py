@@ -37,7 +37,8 @@ def main() -> None:
         print(f"Drew: {card.name} ({card.card_type.capitalize()})")
         print("Play result:", card.play(game_state))
 
-    print("\nPolymorphism in action: Same interface, different card behaviors!")
+    print()
+    print("Polymorphism in action: Same interface, different card behaviors!")
 
 
 if __name__ == "__main__":

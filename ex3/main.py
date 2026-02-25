@@ -4,27 +4,32 @@ from ex3.AggressiveStrategy import AggressiveStrategy
 
 
 def main():
-    print("=== DataDeck Game Engine ===")
+    print("=== DataDeck Game Engine ===\n")
 
     engine = GameEngine()
     factory = FantasyCardFactory()
     strategy = AggressiveStrategy()
 
+    # It is not a parameter of __init__ just to keep PDF format
+    factory.name = "Fantasy Factory"
+    strategy.name = "Aggressive Strategy"
+
     print("Configuring Fantasy Card Game...")
     engine.configure_engine(factory, strategy)
+    engine.setup_game(3)  # Not required
 
-    print("Factory:", factory.__class__.__name__)
+    # PDF-> Factory does not require getname
+    print("Factory:", factory.name)
     print("Strategy:", strategy.get_strategy_name())
     print("Available types:", factory.get_supported_types())
-
+    print()
     print("Simulating aggressive turn...")
-
     result = engine.simulate_turn()
-
+    print()
     print("Turn execution:")
     print("Strategy:", strategy.get_strategy_name())
     print("Actions:", result)
-
+    print()
     print("Game Report:")
     print(engine.get_engine_status())
 
