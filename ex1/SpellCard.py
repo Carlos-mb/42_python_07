@@ -17,15 +17,22 @@ class SpellCard(Card):
         if effect_type not in self.effect_types:
             raise ValueError("ERROR: Wrong effect_type")
         self.effect_type: str = effect_type
+        self.damage = 5  # Just to create the same output than PDF in ex3
 
     def play(self, game_state: dict) -> dict:
-        if self.is_playable(game_state["available_mana"]):
-            result = self.resolve_effect(game_state["targets"])
-            result["card_played"] = self.name
-            result["mana_used"] = self.cost
-            game_state["available_mana"] -= self.cost
-        else:
-            result = {"error": "Not enough mana."}
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        targets = game_state.get("targets", [])
+
+        result = self.resolve_effect(targets)
+        result["card_played"] = self.name
+        result["mana_used"] = self.cost
+
+        game_state["available_mana"] = available_mana - self.cost
+
         return result
 
     def resolve_effect(self, targets: list) -> dict:
@@ -33,3 +40,6 @@ class SpellCard(Card):
                 "effect_type": self.effect_type,
                 "targets": targets,
                 "effect": self.effect_types[self.effect_type]}
+
+    def get_impact(self) -> int:
+        return self.damage

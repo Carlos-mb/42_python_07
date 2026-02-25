@@ -35,8 +35,11 @@ class CreatureCard(Card):
             "combat_resolved": True
             }
 
-    def get_card_info(self) -> dict:
+    def get_card_info(self) -> dict[str, str | int]:
         output: dict[str, str | int] = super().get_card_info()
         output["attack"] = self.attack
         output["health"] = self.health
         return output
+
+    def get_impact(self) -> int:
+        return self.attack

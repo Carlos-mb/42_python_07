@@ -15,14 +15,16 @@ class ArtifactCard(Card):
         self.effect = effect
 
     def play(self, game_state: dict) -> dict:
-        if self.is_playable(game_state["available_mana"]):
-            result = {}
-            result["card_played"] = self.name
-            result["mana_used"] = self.cost
-            result["effect"] = f"Permanent: {self.effect}"
-            game_state["available_mana"] -= self.cost
-        else:
-            result = {"error": "Not enough mana."}
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        result = {}
+        result["card_played"] = self.name
+        result["mana_used"] = self.cost
+        result["effect"] = f"Permanent: {self.effect}"
+        game_state["available_mana"] = available_mana - self.cost
         return result
 
     def activate_ability(self) -> dict:

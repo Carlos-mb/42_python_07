@@ -1,6 +1,4 @@
 from ex3.GameStrategy import GameStrategy
-from ex0.CreatureCard import CreatureCard
-from ex1.SpellCard import SpellCard
 from ex0.Card import Card
 from typing import Any
 
@@ -32,10 +30,7 @@ class AggressiveStrategy(GameStrategy):
                 cards_played.append(card.name)
                 mana_used += card.cost
 
-                if isinstance(card, CreatureCard):
-                    damage_dealt += card.attack
-                elif isinstance(card, SpellCard):
-                    damage_dealt += card.cost
+                damage_dealt += card.get_impact()
 
         return {
             "cards_played": cards_played,
