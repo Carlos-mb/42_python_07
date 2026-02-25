@@ -2,6 +2,9 @@ from ex0.Card import Card
 
 
 class CreatureCard(Card):
+
+    card_type: str = "creature"
+
     def __init__(self,
                  name: str, cost: int, rarity: str,
                  attack: int, health: int) -> None:

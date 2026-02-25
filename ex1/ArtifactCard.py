@@ -3,6 +3,8 @@ from ex0.Card import Card
 
 class ArtifactCard(Card):
 
+    card_type: str = "artifact"
+
     def __init__(self, name: str, cost: int,
                  rarity: str, durability: int, effect: str) -> None:
 

@@ -3,6 +3,8 @@ from ex0.Card import Card
 
 class SpellCard(Card):
 
+    card_type: str = "spell"
+
     effect_types: dict[str, str] = {
             "damage": "Deal 3 damage to target", 
             "heal": "Restore 3 health",

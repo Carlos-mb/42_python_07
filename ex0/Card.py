@@ -8,6 +8,8 @@ class Card(ABC):
         self.cost: int = cost
         self.rarity: str = rarity
 
+    card_type: str = "Generic"  # Not required, but it make the system more flex
+
     @abstractmethod
     def play(self, game_state: dict) -> dict:
         ...

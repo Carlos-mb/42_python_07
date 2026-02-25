@@ -9,6 +9,8 @@ class Card(ABC):
         self.cost: int = cost
         self.rarity: str = rarity
 
+    card_type: str = "Generic"  # Not required, but it make the system more flex
+
     @abstractmethod
     def play(self, game_state: dict) -> dict:
         ...
@@ -29,6 +31,9 @@ from ex0.Card import Card
 
 
 class CreatureCard(Card):
+
+    card_type: str = "creature"
+
     def __init__(self,
                  name: str, cost: int, rarity: str,
                  attack: int, health: int) -> None:
@@ -119,6 +124,8 @@ from ex0.Card import Card
 
 class ArtifactCard(Card):
 
+    card_type: str = "artifact"
+
     def __init__(self, name: str, cost: int,
                  rarity: str, durability: int, effect: str) -> None:
 
@@ -161,6 +168,53 @@ class ArtifactCard(Card):
         }
 
 ==> ex1/Deck.py <==
+from ex0.Card import Card
+import random
+
+
+class Deck:
+
+    def __init__(self) -> None:
+        self.cards: list[Card] = []
+
+    def add_card(self, card: Card) -> None:
+        self.cards.append(card)
+
+    def remove_card(self, card_name: str) -> bool:
+        for card in self.cards:
+            if card.name == card_name:
+                self.cards.remove(card)
+                return True
+        return False
+
+    def shuffle(self) -> None:
+        random.shuffle(self.cards)
+
+    def draw_card(self) -> Card:
+        if not self.cards:
+            raise ValueError("Deck is empty")
+        return self.cards.pop(0)  # pop -> Eliminates and return the card
+
+    def get_deck_stats(self) -> dict:
+
+        statistics: dict[str, int | float] = {}
+
+        total = len(self.cards)
+        statistics["total_cards"] = total
+
+        total_cost = 0
+
+        for card in self.cards:
+            statistics[card.card_type] = \
+                statistics.get(card.card_type, 0) + 1
+            total_cost += card.cost
+
+        statistics["avg_cost"] = (
+            total_cost / total if total > 0 else 0  # IF is applyed before
+                                                    # division
+        )
+
+        return statistics
 
 ==> ex1/main.py <==
 def main() -> None:
@@ -180,6 +234,8 @@ from ex0.Card import Card
 
 
 class SpellCard(Card):
+
+    card_type: str = "spell"
 
     effect_types: dict[str, str] = {
             "damage": "Deal 3 damage to target", 
