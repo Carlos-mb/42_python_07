@@ -1,67 +1,48 @@
-TournamentCard inherits from:
-    Card
-    Combatable
-    Rankable
+from ex0.Card import Card
+from ex2.Combatable import Combatable
+from ex4.Rankable import Rankable
 
-Attributes:
-    wins: int = 0
-    losses: int = 0
-    rating: int = 1200   # rating base tipo ELO simple
-    attack_power
-    defense
-    health
+class Tournamentcard(Card, Combatable, Rankable):
+    
+    def __init__(self,  name: str, cost: int, rarity: str) -> None:
+        self.wins: int = 0
+        self.losses: int = 0
+        self.rating: int = 1200
 
-Debe implementar TODOS los métodos abstractos de:
-
-Card
-
-Combatable
-
-Rankable
-
-Class TournamentCard(Card, Combatable, Rankable)
-
-    Constructor(...)
-        call super().__init__()
-        initialize combat stats
-        initialize wins = 0
-        initialize losses = 0
-        initialize rating = 1200
-
-    Method play(game_state) -> dict
+    def play(self, game_state: dict) -> dict:
         return simple deployment message
 
-    Method attack(target) -> dict
+    def attack(target) -> dict
         call target.defend(self.attack_power)
         return combat result dict
 
-    Method defend(incoming_damage) -> dict
+    def defend(incoming_damage) -> dict
         apply defense logic
         update health
         return defense result
 
-    Method get_combat_stats() -> dict
+    def get_combat_stats() -> dict
         return attack/defense/health
 
-    Method update_wins(wins: int)
+    def update_wins(wins: int)
         self.wins += wins
 
-    Method update_losses(losses: int)
+    def update_losses(losses: int)
         self.losses += losses
 
-    Method calculate_rating() -> int
+    def calculate_rating() -> int
         rating = 1200 + (wins * 16) - (losses * 16)
         self.rating = rating
         return rating
 
-    Method get_rank_info() -> dict
+    def get_rank_info() -> dict
         return {
             "rating": self.rating,
             "wins": self.wins,
             "losses": self.losses
         }
 
-    Method get_tournament_stats() -> dict
+    def get_tournament_stats() -> dict
         combine:
             card info
             combat stats

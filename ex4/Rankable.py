@@ -1,13 +1,20 @@
-Class Rankable inherits from ABC
+from abc import ABC, abstractmethod
 
-    Abstract method calculate_rating() -> int
-        # Devuelve rating actual basado en wins/losses
 
-    Abstract method update_wins(wins: int) -> None
-        # Incrementa contador de victorias
+class Rankable(ABC):
 
-    Abstract method update_losses(losses: int) -> None
-        # Incrementa contador de derrotas
+    @abstractmethod
+    def calculate_rating(self) -> int:
+        ...
 
-    Abstract method get_rank_info() -> dict
-        # Devuelve información estructurada del ranking
+    @abstractmethod
+    def update_wins(self, wins: int) -> None:
+        ...
+
+    @abstractmethod
+    def update_losses(self, losses: int) -> None:
+        ...
+
+    @abstractmethod
+    def get_rank_info(self) -> dict:
+        ...
