@@ -11,7 +11,8 @@ class SpellCard(Card):
             "buff": "Increase attack by 2",
             "debuff": "Reduce enemy attack by 2"}
 
-    def __init__(self, name: str, cost: int, rarity: str, effect_type: str):
+    def __init__(self, name: str, cost: int,
+                 rarity: str, effect_type: str) -> None:
         super().__init__(name=name, cost=cost, rarity=rarity)
 
         if effect_type not in self.effect_types:

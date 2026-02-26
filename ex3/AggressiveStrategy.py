@@ -42,7 +42,7 @@ class AggressiveStrategy(GameStrategy):
     def get_strategy_name(self) -> str:
         return self.name
 
-    def prioritize_targets(self, available_targets: list[str]) -> list[str]:
+    def prioritize_targets(self, available_targets: list) -> list:
         # Aggressive strategy: attack any target containing "Enemy"
         # I don't know the actual battlefield content.
         return [t for t in available_targets if "Enemy" in t]

@@ -15,7 +15,7 @@ class Card(ABC):
     def play(self, game_state: dict) -> dict:
         ...
 
-    def get_card_info(self) -> dict[str, str | int]:
+    def get_card_info(self) -> dict:
         return {
             "name": self.name,
             "cost": self.cost,

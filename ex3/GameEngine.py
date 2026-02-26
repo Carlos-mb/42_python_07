@@ -24,7 +24,8 @@ class GameEngine:
         hand_str = ", ".join(f"{c.name} ({c.cost})" for c in self.hand)
         print(f"Hand: [{hand_str}]")
 
-        result = self.strategy.execute_turn(self.hand, [])
+        battlefield = ["Enemy Player"]
+        result = self.strategy.execute_turn(self.hand, battlefield)
 
         self.turns_simulated += 1
         self.total_damage += result["damage_dealt"]

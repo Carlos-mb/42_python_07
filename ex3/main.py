@@ -3,16 +3,12 @@ from ex3.FantasyCardFactory import FantasyCardFactory
 from ex3.AggressiveStrategy import AggressiveStrategy
 
 
-def main():
+def main() -> None:
     print("=== DataDeck Game Engine ===\n")
 
     engine = GameEngine()
     factory = FantasyCardFactory()
     strategy = AggressiveStrategy()
-
-    # It is not a parameter of __init__ just to keep PDF format
-    factory.name = "Fantasy Factory"
-    strategy.name = "Aggressive Strategy"
 
     print("Configuring Fantasy Card Game...")
     engine.configure_engine(factory, strategy)
@@ -32,7 +28,7 @@ def main():
     print()
     print("Game Report:")
     print(engine.get_engine_status())
-
+    print()
     print("Abstract Factory + Strategy Pattern: Maximum flexibility achieved!")
 
 

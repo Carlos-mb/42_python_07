@@ -7,6 +7,9 @@ from ex0.Card import Card
 
 class FantasyCardFactory(CardFactory):
 
+    def __init__(self) -> None:
+        self.name = "FantasyCardFactory"
+
     def create_creature(self, name_or_power: str | int | None = None) -> Card:
         if name_or_power == "dragon":
             return CreatureCard("Fire Dragon", 5, "Legendary", 5, 5)

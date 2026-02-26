@@ -82,7 +82,7 @@ class EliteCard(Card, Combatable, Magical):
             "health": self.health
         }
 
-    def cast_spell(self, spell_name: str, targets: list[str]) -> dict:
+    def cast_spell(self, spell_name: str, targets: list) -> dict:
         mana_cost = 3
 
         if self.mana < mana_cost:

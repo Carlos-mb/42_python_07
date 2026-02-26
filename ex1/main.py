@@ -5,14 +5,14 @@ from ex1.Deck import Deck
 
 
 def main() -> None:
-    print("=== DataDeck Deck Builder ===")
+    print("=== DataDeck Deck Builder ===\n")
     print("Building deck with different card types...")
 
     deck = Deck()
 
     creature = CreatureCard("Fire Dragon", 5, "Legendary", 7, 5)
     spell = SpellCard("Lightning Bolt", 3, "Common", "damage")
-    artifact = ArtifactCard("Mana Crystal", 2, "Rare", 3, "+1 mana per turn")
+    artifact = ArtifactCard("Mana Crystal", 4, "Rare", 3, "+1 mana per turn")
 
     deck.add_card(creature)
     deck.add_card(spell)
@@ -34,7 +34,7 @@ def main() -> None:
         except ValueError:
             break
 
-        print(f"Drew: {card.name} ({card.card_type.capitalize()})")
+        print(f"\nDrew: {card.name} ({card.card_type.capitalize()})")
         print("Play result:", card.play(game_state))
 
     print()
