@@ -84,7 +84,7 @@ class TournamentCard(Card, Combatable, Rankable):
         self.losses += losses
 
     def calculate_rating(self) -> int:
-        self.rating = self.wins * 2 - self.losses
+        self.rating = 1200 + (self.wins * 10) - (self.losses * 5)
         return self.rating
 
     def get_rank_info(self) -> dict:

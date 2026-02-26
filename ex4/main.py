@@ -4,10 +4,12 @@ from ex4.TournamentPlatform import TournamentPlatform
 
 def main() -> None:
     print("=== DataDeck Tournament Platform ===\n")
-    print()
+
     platform = TournamentPlatform()
 
-    card_dragon = TournamentCard(
+    print("Registering Tournament Cards...\n")
+
+    card1 = TournamentCard(
         name="Fire Dragon",
         cost=5,
         rarity="Legendary",
@@ -16,8 +18,8 @@ def main() -> None:
         health=20
     )
 
-    card_warrior = TournamentCard(
-        name="Arcane Warrior",
+    card2 = TournamentCard(
+        name="Ice Wizard",
         cost=4,
         rarity="Epic",
         attack=5,
@@ -25,52 +27,41 @@ def main() -> None:
         health=18
     )
 
-    card_goblin = TournamentCard(
-        name="Goblin Raider",
-        cost=2,
-        rarity="Common",
-        attack=3,
-        defense=1,
-        health=10
-    )
+    id1 = platform.register_card(card1)
+    id2 = platform.register_card(card2)
 
-    dragon_id = platform.register_card(card_dragon)
-    warrior_id = platform.register_card(card_warrior)
-    goblin_id = platform.register_card(card_goblin)
+    # Print registration info (PDF-like structure)
+    for card_id, card in [(id1, card1), (id2, card2)]:
+        rank_info = card.get_rank_info()
 
-    print("Registered Cards:")
-    print(dragon_id, card_dragon.get_card_info())
-    print(warrior_id, card_warrior.get_card_info())
-    print(goblin_id, card_goblin.get_card_info())
-    print()
+        print()
+        print(f"{card.name} (ID: {card_id}):")
+        print("- Interfaces: [Card, Combatable, Rankable]")
+        print(f"- Rating: {rank_info['rating']}")
+        print(f"- Record: {rank_info['wins']}-{rank_info['losses']}")
 
-    print("--- Match 1 ---")
-    result1 = platform.create_match(dragon_id, warrior_id)
-    print(result1)
+    print("\nCreating tournament match...")
 
-    print("\n--- Match 2 ---")
-    result2 = platform.create_match(warrior_id, goblin_id)
-    print(result2)
+    match_result = platform.create_match(id1, id2)
+    print(f"Match result: {match_result}")
 
-    print("\n--- Match 3 ---")
-    result3 = platform.create_match(dragon_id, goblin_id)
-    print(result3)
+    print("\nTournament Leaderboard:")
 
-    # Leaderboard
-    print("\n=== Leaderboard ===")
     leaderboard = platform.get_leaderboard()
     for position, entry in enumerate(leaderboard, start=1):
         print(
-            f"{position}. {entry['name']} "
-            f"(Rating: {entry['rating']}, Record: {entry['record']})"
+            f"{position}. {entry['name']} - "
+            f"Rating: {entry['rating']} "
+            f"({entry['record']})"
         )
 
-    # Tournament Report
-    print("\n=== Tournament Report ===")
+    print("\nPlatform Report:")
     report = platform.generate_tournament_report()
     print(report)
 
-    print("\nTournament system fully operational.")
+    print("""
+=== Tournament Platform Successfully Deployed! ===
+All abstract patterns working together harmoniously""")
 
 
 if __name__ == "__main__":
