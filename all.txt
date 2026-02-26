@@ -1,0 +1,1082 @@
+==> __init__.py <==
+
+==> ex0/Card.py <==
+from abc import ABC, abstractmethod
+
+
+class Card(ABC):
+
+    def __init__(self, name: str, cost: int, rarity: str) -> None:
+        self.name: str = name
+        self.cost: int = cost
+        self.rarity: str = rarity
+
+    # Not required, but it make the system more flexible
+    card_type: str = "Generic"
+
+    @abstractmethod
+    def play(self, game_state: dict) -> dict:
+        ...
+
+    def get_card_info(self) -> dict[str, str | int]:
+        return {
+            "name": self.name,
+            "cost": self.cost,
+            "rarity": self.rarity,
+            "type": self.__class__.__name__
+            }
+
+    def is_playable(self, available_mana: int) -> bool:
+        return available_mana >= self.cost
+
+    def get_impact(self) -> int:
+        return 0
+
+==> ex0/CreatureCard.py <==
+from ex0.Card import Card
+
+
+class CreatureCard(Card):
+
+    card_type: str = "creature"
+
+    def __init__(self,
+                 name: str, cost: int, rarity: str,
+                 attack: int, health: int) -> None:
+
+        super().__init__(name, cost, rarity)
+
+        if attack <= 0:
+            raise ValueError("Error: attack must be positive integer.")
+        elif health <= 0:
+            raise ValueError("Error: health must be positive integer.")
+        else:
+            self.attack: int = attack
+            self.health: int = health
+
+    def play(self, game_state: dict) -> dict:
+        # In this point of the exercise I'm not managing mana.
+        return {
+                "card_played": self.name,
+                "mana_used": self.cost,
+                "effect": "Creature summoned to battlefield"
+                }
+
+    def attack_target(self, target: str) -> dict:
+        return {
+            "attacker": self.name,
+            "target": target,
+            "damage_dealt": self.attack,
+            "combat_resolved": True
+            }
+
+    def get_card_info(self) -> dict[str, str | int]:
+        output: dict[str, str | int] = super().get_card_info()
+        output["attack"] = self.attack
+        output["health"] = self.health
+        return output
+
+    def get_impact(self) -> int:
+        return self.attack
+
+==> ex0/__init__.py <==
+
+==> ex0/main.py <==
+from ex0.CreatureCard import CreatureCard
+
+
+def main() -> None:
+    print("=== DataDeck Card Foundation ===")
+    print("Testing Abstract Base Class Design:\n")
+
+    # Create creature
+    creature = CreatureCard(
+        name="Fire Dragon",
+        cost=5,
+        rarity="Legendary",
+        attack=7,
+        health=5
+    )
+
+    # Show card info
+    print("CreatureCard Info:")
+    print(creature.get_card_info())
+
+    # Test playable with enough mana
+    print("\nPlaying Fire Dragon with 6 mana available:")
+    playable = creature.is_playable(6)
+    print(f"Playable: {playable}")
+
+    if playable:
+        result = creature.play({})
+        print("Play result:", result)
+
+    # Attack demonstration
+    print("\nFire Dragon attacks Goblin Warrior:")
+    attack_result = creature.attack_target("Goblin Warrior")
+    print("Attack result:", attack_result)
+
+    # Test insufficient mana
+    print("\nTesting insufficient mana (3 available):")
+    playable_low = creature.is_playable(3)
+    print(f"Playable: {playable_low}")
+
+    print("\nAbstract pattern successfully demonstrated!")
+
+
+if __name__ == "__main__":
+    main()
+
+==> ex1/ArtifactCard.py <==
+from ex0.Card import Card
+
+
+class ArtifactCard(Card):
+
+    card_type: str = "artifact"
+
+    def __init__(self, name: str, cost: int,
+                 rarity: str, durability: int, effect: str) -> None:
+
+        super().__init__(name=name, cost=cost, rarity=rarity)
+        if durability <= 0:
+            raise ValueError("Error: durability must ve positive integer")
+        self.durability = durability
+        self.effect = effect
+
+    def play(self, game_state: dict) -> dict:
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        result = {}
+        result["card_played"] = self.name
+        result["mana_used"] = self.cost
+        result["effect"] = f"Permanent: {self.effect}"
+        game_state["available_mana"] = available_mana - self.cost
+        return result
+
+    def activate_ability(self) -> dict:
+
+        if self.durability <= 0:
+            return {
+                "artifact": self.name,
+                "effect": None,
+                "durability_remaining": 0,
+                "status": "destroyed"
+            }
+
+        self.durability -= 1
+
+        status = "active" if self.durability > 0 else "destroyed"
+
+        return {
+            "artifact": self.name,
+            "effect": self.effect,
+            "durability_remaining": self.durability,
+            "status": status
+        }
+
+==> ex1/Deck.py <==
+from ex0.Card import Card
+import random
+
+
+class Deck:
+
+    def __init__(self) -> None:
+        self.cards: list[Card] = []
+
+    def add_card(self, card: Card) -> None:
+        self.cards.append(card)
+
+    def remove_card(self, card_name: str) -> bool:
+        for card in self.cards:
+            if card.name == card_name:
+                self.cards.remove(card)
+                return True
+        return False
+
+    def shuffle(self) -> None:
+        random.shuffle(self.cards)
+
+    def draw_card(self) -> Card:
+        if not self.cards:
+            raise ValueError("Deck is empty")
+        return self.cards.pop(0)  # pop -> Eliminates and return the card
+
+    def get_deck_stats(self) -> dict:
+
+        statistics: dict[str, int | float] = {}
+
+        total = len(self.cards)
+        statistics["total_cards"] = total
+
+        total_cost = 0
+
+        for card in self.cards:
+            statistics[card.card_type] = \
+                statistics.get(card.card_type, 0) + 1
+            total_cost += card.cost
+
+        statistics["avg_cost"] = (
+            # IF is applyed before division
+            round(total_cost / total, 2) if total > 0 else 0
+        )
+
+        return statistics
+
+==> ex1/main.py <==
+from ex0.CreatureCard import CreatureCard
+from ex1.SpellCard import SpellCard
+from ex1.ArtifactCard import ArtifactCard
+from ex1.Deck import Deck
+
+
+def main() -> None:
+    print("=== DataDeck Deck Builder ===")
+    print("Building deck with different card types...")
+
+    deck = Deck()
+
+    creature = CreatureCard("Fire Dragon", 5, "Legendary", 7, 5)
+    spell = SpellCard("Lightning Bolt", 3, "Common", "damage")
+    artifact = ArtifactCard("Mana Crystal", 2, "Rare", 3, "+1 mana per turn")
+
+    deck.add_card(creature)
+    deck.add_card(spell)
+    deck.add_card(artifact)
+
+    print("Deck stats:", deck.get_deck_stats())
+
+    print("\nDrawing and playing cards:")
+    deck.shuffle()
+
+    game_state = {
+        "available_mana": 10,
+        "targets": ["Enemy Player"]
+    }
+
+    while True:
+        try:
+            card = deck.draw_card()
+        except ValueError:
+            break
+
+        print(f"Drew: {card.name} ({card.card_type.capitalize()})")
+        print("Play result:", card.play(game_state))
+
+    print()
+    print("Polymorphism in action: Same interface, different card behaviors!")
+
+
+if __name__ == "__main__":
+    main()
+
+==> ex1/SpellCard.py <==
+from ex0.Card import Card
+
+
+class SpellCard(Card):
+
+    card_type: str = "spell"
+
+    effect_types: dict[str, str] = {
+            "damage": "Deal 3 damage to target",
+            "heal": "Restore 3 health",
+            "buff": "Increase attack by 2",
+            "debuff": "Reduce enemy attack by 2"}
+
+    def __init__(self, name: str, cost: int, rarity: str, effect_type: str):
+        super().__init__(name=name, cost=cost, rarity=rarity)
+
+        if effect_type not in self.effect_types:
+            raise ValueError("ERROR: Wrong effect_type")
+        self.effect_type: str = effect_type
+        self.damage = 5  # Just to create the same output than PDF in ex3
+
+    def play(self, game_state: dict) -> dict:
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        targets = game_state.get("targets", [])
+
+        result = self.resolve_effect(targets)
+        result["card_played"] = self.name
+        result["mana_used"] = self.cost
+
+        game_state["available_mana"] = available_mana - self.cost
+
+        return result
+
+    def resolve_effect(self, targets: list) -> dict:
+        return {
+                "effect_type": self.effect_type,
+                "targets": targets,
+                "effect": self.effect_types[self.effect_type]}
+
+    def get_impact(self) -> int:
+        return self.damage
+
+==> ex2/Combatable.py <==
+from abc import ABC, abstractmethod
+from typing import Any  # PDF attack() definion vs PDF hint requirement
+
+
+class Combatable(ABC):
+    """This is an contract to action.
+    It has no knowledge of the game or cards.
+    If you want to be 'combatable', you have to implement: """
+
+    @abstractmethod
+    def attack(self, target: Any) -> dict:
+        """The PDF says attack(self, target) -> dict:
+        and also says:
+        • Use type hints for all function signatures and class methods.
+        and, in the example, they appear to use .name when printing attack
+        """
+        ...
+
+    @abstractmethod
+    def defend(self, incoming_damage: int) -> dict:
+        """Handle incoming damage."""
+        ...
+
+    @abstractmethod
+    def get_combat_stats(self) -> dict:
+        """Return combat-related statistics."""
+        ...
+
+==> ex2/EliteCard.py <==
+from ex0.Card import Card
+from ex2.Combatable import Combatable
+from ex2.Magical import Magical
+
+
+class EliteCard(Card, Combatable, Magical):
+
+    card_type: str = "elite"
+
+    def __init__(
+        self,
+        name: str,
+        cost: int,
+        rarity: str,
+        attack: int,
+        defense: int,
+        health: int,
+        mana: int,
+        spell_power: int
+    ) -> None:
+
+        super().__init__(name, cost, rarity)
+
+        if attack <= 0 or defense < 0 or health <= 0:
+            raise ValueError("Invalid combat stats")
+        if mana < 0 or spell_power < 0:
+            raise ValueError("Invalid magic stats")
+
+        # Combat attributes
+        self.attack_power = attack
+        self.defense = defense
+        self.health = health
+
+        # Magical attributes
+        self.mana = mana
+        self.spell_power = spell_power
+
+    def play(self, game_state: dict) -> dict:
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        game_state["available_mana"] = available_mana - self.cost
+
+        return {
+            "card_played": self.name,
+            "mana_used": self.cost,
+            "effect": "Elite unit deployed"
+        }
+
+    def defend(self, incoming_damage: int) -> dict:
+        damage_blocked = min(self.defense, incoming_damage)
+        damage_taken = max(incoming_damage - self.defense, 0)
+
+        self.health -= damage_taken
+
+        return {
+            "defender": self.name,
+            "damage_taken": damage_taken,
+            "damage_blocked": damage_blocked,
+            "still_alive": self.health > 0
+        }
+
+    def attack(self, target) -> dict:
+        try:
+            target.defend(self.attack_power)
+        except AttributeError:
+            return {"error": "Target is not attackable"}
+
+        return {
+            "attacker": self.name,
+            "target": target.name,
+            "damage": self.attack_power,
+            "combat_type": "melee"
+        }
+
+    def get_combat_stats(self) -> dict:
+        return {
+            "attack": self.attack_power,
+            "defense": self.defense,
+            "health": self.health
+        }
+
+    def cast_spell(self, spell_name: str, targets: list[str]) -> dict:
+        mana_cost = 3
+
+        if self.mana < mana_cost:
+            return {
+                "caster": self.name,
+                "spell": spell_name,
+                "error": "Not enough mana"
+            }
+
+        self.mana -= mana_cost
+
+        return {
+            "caster": self.name,
+            "spell": spell_name,
+            "targets": targets,
+            "magic_damage": self.spell_power,
+            "mana_cost": mana_cost
+        }
+
+    def channel_mana(self, amount: int) -> dict:
+        self.mana += amount
+
+        return {
+            "caster": self.name,
+            "mana_channeled": amount,
+            "current_mana": self.mana
+        }
+
+    def get_magic_stats(self) -> dict:
+        return {
+            "mana": self.mana,
+            "spell_power": self.spell_power
+        }
+
+==> ex2/__init__.py <==
+
+==> ex2/Magical.py <==
+from abc import ABC, abstractmethod
+
+
+class Magical(ABC):
+    """Contract for magical capabilities.
+    Defines required magic-related behavior."""
+
+    @abstractmethod
+    def cast_spell(self, spell_name: str, targets: list) -> dict:
+        """Cast a spell on one or more targets."""
+        ...
+
+    @abstractmethod
+    def channel_mana(self, amount: int) -> dict:
+        """Channel additional mana."""
+        ...
+
+    @abstractmethod
+    def get_magic_stats(self) -> dict:
+        """Return magic-related statistics."""
+        ...
+
+==> ex2/main.py <==
+from ex2.EliteCard import EliteCard
+
+
+def main() -> None:
+    print("=== DataDeck Elite Combat System ===")
+
+    # Create an elite card
+    warrior = EliteCard(
+        name="Arcane Warrior",
+        cost=6,
+        rarity="Epic",
+        attack=5,
+        defense=3,
+        health=20,
+        mana=10,
+        spell_power=7
+    )
+
+    print("\nCombat Stats:")
+    print(warrior.get_combat_stats())
+
+    print("\nMagic Stats:")
+    print(warrior.get_magic_stats())
+
+    # Simulated enemy (another EliteCard for simplicity)
+    enemy = EliteCard(
+        name="Enemy",
+        cost=4,
+        rarity="Common",
+        attack=4,
+        defense=2,
+        health=15,
+        mana=5,
+        spell_power=4
+    )
+
+    print("\n--- Combat Phase ---")
+
+    attack_result = warrior.attack(enemy)
+    print("Attack result:", attack_result)
+
+    defense_result = warrior.defend(5)
+    print("Defense result:", defense_result)
+
+    print("\n--- Magic Phase ---")
+
+    spell_result = warrior.cast_spell("Fireball", ["Enemy"])
+    print("Spell cast result:", spell_result)
+
+    channel_result = warrior.channel_mana(5)
+    print("Mana channel result:", channel_result)
+
+    print("\nFinal Magic Stats:")
+    print(warrior.get_magic_stats())
+
+
+if __name__ == "__main__":
+    main()
+
+==> ex3/AggressiveStrategy.py <==
+from ex3.GameStrategy import GameStrategy
+from ex0.Card import Card
+from typing import Any
+
+
+class AggressiveStrategy(GameStrategy):
+
+    def __init__(self) -> None:
+        self.name = "AggressiveStrategy"
+
+    def execute_turn(
+        self,
+        hand: list[Card],
+        battlefield: list[str]
+    ) -> dict[str, Any]:
+
+        mana_limit = 5
+        mana_used = 0
+        cards_played: list[str] = []
+        damage_dealt = 0
+
+        # Use battlefield through strategy logic
+        targets_attacked = self.prioritize_targets(battlefield)
+
+        # Play lowest cost first
+        sorted_hand = sorted(hand, key=lambda c: c.cost)
+
+        for card in sorted_hand:
+            if mana_used + card.cost <= mana_limit:
+                cards_played.append(card.name)
+                mana_used += card.cost
+
+                damage_dealt += card.get_impact()
+
+        return {
+            "cards_played": cards_played,
+            "mana_used": mana_used,
+            "targets_attacked": targets_attacked,
+            "damage_dealt": damage_dealt
+        }
+
+    def get_strategy_name(self) -> str:
+        return self.name
+
+    def prioritize_targets(self, available_targets: list[str]) -> list[str]:
+        # Aggressive strategy: attack any target containing "Enemy"
+        # I don't know the actual battlefield content.
+        return [t for t in available_targets if "Enemy" in t]
+
+==> ex3/CardFactory.py <==
+from abc import ABC, abstractmethod
+from ex0.Card import Card
+
+
+class CardFactory(ABC):
+
+    @abstractmethod
+    def create_creature(self, name_or_power: str | int | None = None) -> Card:
+        ...
+
+    @abstractmethod
+    def create_spell(self, name_or_power: str | int | None = None) -> Card:
+        ...
+
+    @abstractmethod
+    def create_artifact(self, name_or_power: str | int | None = None) -> Card:
+        ...
+
+    @abstractmethod
+    def create_themed_deck(self, size: int) -> dict:
+        ...
+
+    @abstractmethod
+    def get_supported_types(self) -> dict:
+        ...
+
+==> ex3/FantasyCardFactory.py <==
+from ex3.CardFactory import CardFactory
+from ex0.CreatureCard import CreatureCard
+from ex1.SpellCard import SpellCard
+from ex1.ArtifactCard import ArtifactCard
+from ex0.Card import Card
+
+
+class FantasyCardFactory(CardFactory):
+
+    def create_creature(self, name_or_power: str | int | None = None) -> Card:
+        if name_or_power == "dragon":
+            return CreatureCard("Fire Dragon", 5, "Legendary", 5, 5)
+        elif name_or_power == "goblin":
+            return CreatureCard("Goblin Warrior", 2, "Common", 3, 2)
+        else:
+            raise ValueError("Error. Name or power not allowed")
+
+    def create_spell(self, name_or_power: str | int | None = None) -> Card:
+        if name_or_power == "fireball":
+            return SpellCard("Lightning Bolt", 3, "Common", "damage")
+        else:
+            raise ValueError("Error: name_or_power does not exist")
+
+    def create_artifact(self, name_or_power: str | int | None = None) -> Card:
+        if name_or_power == "mana_ring":
+            return ArtifactCard("Mana Ring", 2, "Rare", 3, "+1 mana")
+        else:
+            raise ValueError("Error: name_or_power does not exist")
+
+    def create_themed_deck(self, size: int) -> dict:
+        # deck can't be a dict of craetures because a deck has te be
+        # ordered. In the PDF output it apperas as a list, limited
+        # by []
+        # But the method has to return a dict !!!. So, I create a
+        # single element in the dict
+        deck = [
+            self.create_creature("dragon"),
+            self.create_creature("goblin"),
+            self.create_spell("fireball")
+        ]
+        return {"deck": deck[:size]}
+
+    def get_supported_types(self) -> dict:
+        return {
+            "creatures": ["dragon", "goblin"],
+            "spells": ["fireball"],
+            "artifacts": ["mana_ring"]
+        }
+
+==> ex3/GameEngine.py <==
+from ex3.CardFactory import CardFactory
+from ex3.GameStrategy import GameStrategy
+
+
+class GameEngine:
+
+    def __init__(self) -> None:
+        self.turns_simulated = 0
+        self.total_damage = 0
+        self.cards_created = 0
+
+    def configure_engine(self, factory: CardFactory,
+                         strategy: GameStrategy) -> None:
+        self.factory: CardFactory = factory
+        self.strategy: GameStrategy = strategy
+
+    def setup_game(self, deck_size: int) -> None:
+        themed = self.factory.create_themed_deck(deck_size)
+        self.hand = themed["deck"]
+        self.cards_created = len(self.hand)
+
+    def simulate_turn(self) -> dict:
+
+        hand_str = ", ".join(f"{c.name} ({c.cost})" for c in self.hand)
+        print(f"Hand: [{hand_str}]")
+
+        result = self.strategy.execute_turn(self.hand, [])
+
+        self.turns_simulated += 1
+        self.total_damage += result["damage_dealt"]
+
+        return result
+
+    def get_engine_status(self) -> dict:
+        return {
+            "turns_simulated": self.turns_simulated,
+            "strategy_used": self.strategy.get_strategy_name(),
+            "total_damage": self.total_damage,
+            "cards_created": self.cards_created
+        }
+
+==> ex3/GameStrategy.py <==
+from abc import ABC, abstractmethod
+
+
+class GameStrategy(ABC):
+
+    @abstractmethod
+    def execute_turn(self, hand: list, battlefield: list) -> dict:
+        ...
+
+    @abstractmethod
+    def get_strategy_name(self) -> str:
+        ...
+
+    @abstractmethod
+    def prioritize_targets(self, available_targets: list) -> list:
+        ...
+
+==> ex3/__init__.py <==
+
+==> ex3/main.py <==
+from ex3.GameEngine import GameEngine
+from ex3.FantasyCardFactory import FantasyCardFactory
+from ex3.AggressiveStrategy import AggressiveStrategy
+
+
+def main():
+    print("=== DataDeck Game Engine ===\n")
+
+    engine = GameEngine()
+    factory = FantasyCardFactory()
+    strategy = AggressiveStrategy()
+
+    # It is not a parameter of __init__ just to keep PDF format
+    factory.name = "Fantasy Factory"
+    strategy.name = "Aggressive Strategy"
+
+    print("Configuring Fantasy Card Game...")
+    engine.configure_engine(factory, strategy)
+    engine.setup_game(3)  # Not required
+
+    # PDF-> Factory does not require getname
+    print("Factory:", factory.name)
+    print("Strategy:", strategy.get_strategy_name())
+    print("Available types:", factory.get_supported_types())
+    print()
+    print("Simulating aggressive turn...")
+    result = engine.simulate_turn()
+    print()
+    print("Turn execution:")
+    print("Strategy:", strategy.get_strategy_name())
+    print("Actions:", result)
+    print()
+    print("Game Report:")
+    print(engine.get_engine_status())
+
+    print("Abstract Factory + Strategy Pattern: Maximum flexibility achieved!")
+
+
+if __name__ == "__main__":
+    main()
+
+==> ex4/__init__.py <==
+
+==> ex4/main.py <==
+from ex4.TournamentCard import TournamentCard
+from ex4.TournamentPlatform import TournamentPlatform
+
+
+def main() -> None:
+    print("=== DataDeck Tournament Platform ===\n")
+    print()
+    platform = TournamentPlatform()
+
+    card_dragon = TournamentCard(
+        name="Fire Dragon",
+        cost=5,
+        rarity="Legendary",
+        attack=7,
+        defense=3,
+        health=20
+    )
+
+    card_warrior = TournamentCard(
+        name="Arcane Warrior",
+        cost=4,
+        rarity="Epic",
+        attack=5,
+        defense=4,
+        health=18
+    )
+
+    card_goblin = TournamentCard(
+        name="Goblin Raider",
+        cost=2,
+        rarity="Common",
+        attack=3,
+        defense=1,
+        health=10
+    )
+
+    dragon_id = platform.register_card(card_dragon)
+    warrior_id = platform.register_card(card_warrior)
+    goblin_id = platform.register_card(card_goblin)
+
+    print("Registered Cards:")
+    print(dragon_id, card_dragon.get_card_info())
+    print(warrior_id, card_warrior.get_card_info())
+    print(goblin_id, card_goblin.get_card_info())
+    print()
+
+    print("--- Match 1 ---")
+    result1 = platform.create_match(dragon_id, warrior_id)
+    print(result1)
+
+    print("\n--- Match 2 ---")
+    result2 = platform.create_match(warrior_id, goblin_id)
+    print(result2)
+
+    print("\n--- Match 3 ---")
+    result3 = platform.create_match(dragon_id, goblin_id)
+    print(result3)
+
+    # Leaderboard
+    print("\n=== Leaderboard ===")
+    leaderboard = platform.get_leaderboard()
+    for position, entry in enumerate(leaderboard, start=1):
+        print(
+            f"{position}. {entry['name']} "
+            f"(Rating: {entry['rating']}, Record: {entry['record']})"
+        )
+
+    # Tournament Report
+    print("\n=== Tournament Report ===")
+    report = platform.generate_tournament_report()
+    print(report)
+
+    print("\nTournament system fully operational.")
+
+
+if __name__ == "__main__":
+    main()
+
+==> ex4/Rankable.py <==
+from abc import ABC, abstractmethod
+
+
+class Rankable(ABC):
+
+    @abstractmethod
+    def calculate_rating(self) -> int:
+        ...
+
+    @abstractmethod
+    def update_wins(self, wins: int) -> None:
+        ...
+
+    @abstractmethod
+    def update_losses(self, losses: int) -> None:
+        ...
+
+    @abstractmethod
+    def get_rank_info(self) -> dict:
+        ...
+
+==> ex4/TournamentCard.py <==
+from ex0.Card import Card
+from ex2.Combatable import Combatable
+from ex4.Rankable import Rankable
+
+
+class TournamentCard(Card, Combatable, Rankable):
+
+    def __init__(
+        self,
+        name: str,
+        cost: int,
+        rarity: str,
+        attack: int,
+        defense: int,
+        health: int
+    ) -> None:
+        super().__init__(name, cost, rarity)
+
+        if attack <= 0 or defense < 0 or health <= 0:
+            raise ValueError("Invalid combat stats")
+
+        self.attack_power: int = attack
+        self.defense: int = defense
+        self.health: int = health
+
+        self.wins: int = 0
+        self.losses: int = 0
+        self.rating: int = 1200
+
+    # Card
+    def play(self, game_state: dict) -> dict:
+        # I keep game_state for compatibility by I don't use it
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
+            return {"error": "Not enough mana."}
+
+        game_state["available_mana"] = available_mana - self.cost
+
+        return {
+            "card_played": self.name,
+            "mana_used": self.cost,
+            "effect": "Tournament card deployed"
+        }
+
+    # Combatable
+    def attack(self, target) -> dict:
+        try:
+            target.defend(self.attack_power)
+        except AttributeError:
+            return {"error": "Target is not attackable"}
+
+        return {
+            "attacker": self.name,
+            "target": target.name,
+            "damage": self.attack_power
+        }
+
+    def defend(self, incoming_damage: int) -> dict:
+        damage_blocked = min(self.defense, incoming_damage)
+        damage_taken = max(incoming_damage - self.defense, 0)
+
+        self.health -= damage_taken
+
+        return {
+            "defender": self.name,
+            "damage_taken": damage_taken,
+            "damage_blocked": damage_blocked,
+            "still_alive": self.health > 0
+        }
+
+    def get_combat_stats(self) -> dict:
+        return {
+            "attack": self.attack_power,
+            "defense": self.defense,
+            "health": self.health
+        }
+
+    # Rankable
+    def update_wins(self, wins: int) -> None:
+        self.wins += wins
+
+    def update_losses(self, losses: int) -> None:
+        self.losses += losses
+
+    def calculate_rating(self) -> int:
+        self.rating = self.wins * 2 - self.losses
+        return self.rating
+
+    def get_rank_info(self) -> dict:
+        return {
+            "rating": self.rating,
+            "wins": self.wins,
+            "losses": self.losses
+        }
+
+    # Extra helper
+    def get_tournament_stats(self) -> dict:
+        return {
+            **self.get_card_info(),
+            **self.get_combat_stats(),
+            **self.get_rank_info()
+        }
+
+==> ex4/TournamentPlatform.py <==
+from ex4.TournamentCard import TournamentCard
+
+
+class TournamentPlatform:
+
+    def __init__(self) -> None:
+        self.registered_cards: dict[str, TournamentCard] = {}
+        self.matches_played: int = 0
+        self._id_counter: int = 1
+
+    def register_card(self, card: TournamentCard) -> str:
+        card_id = f"{card.name.lower().replace(' ', '_')}_{self._id_counter}"
+        self._id_counter += 1
+
+        self.registered_cards[card_id] = card
+        return card_id
+
+    def create_match(self, card1_id: str, card2_id: str) -> dict:
+
+        card1 = self.registered_cards.get(card1_id)
+        card2 = self.registered_cards.get(card2_id)
+
+        if not card1 or not card2:
+            return {"error": "Invalid card ID"}
+
+        # Simple rule: higher attack wins
+        if card1.attack_power >= card2.attack_power:
+            winner, loser = card1, card2
+            winner_id, loser_id = card1_id, card2_id
+        else:
+            winner, loser = card2, card1
+            winner_id, loser_id = card2_id, card1_id
+
+        winner.update_wins(1)
+        loser.update_losses(1)
+
+        winner.calculate_rating()
+        loser.calculate_rating()
+
+        self.matches_played += 1
+
+        return {
+            "winner": winner_id,
+            "loser": loser_id,
+            "winner_rating": winner.rating,
+            "loser_rating": loser.rating
+        }
+
+    def get_leaderboard(self) -> list:
+
+        sorted_cards = sorted(
+            self.registered_cards.items(),
+            key=lambda item: item[1].rating,
+            reverse=True
+        )
+
+        leaderboard = []
+
+        for card_id, card in sorted_cards:
+            leaderboard.append({
+                "id": card_id,
+                "name": card.name,
+                "rating": card.rating,
+                "record": f"{card.wins}-{card.losses}"
+            })
+
+        return leaderboard
+
+    def generate_tournament_report(self) -> dict:
+
+        total_cards = len(self.registered_cards)
+
+        if total_cards == 0:
+            avg_rating = 0
+        else:
+            avg_rating = sum(
+                card.rating for card in self.registered_cards.values()
+            ) // total_cards  # No decimals
+
+        return {
+            "total_cards": total_cards,
+            "matches_played": self.matches_played,
+            "avg_rating": avg_rating,
+            "platform_status": "active"
+        }

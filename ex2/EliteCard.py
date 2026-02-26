@@ -36,10 +36,12 @@ class EliteCard(Card, Combatable, Magical):
         self.spell_power = spell_power
 
     def play(self, game_state: dict) -> dict:
-        if not self.is_playable(game_state["available_mana"]):
+        available_mana = game_state.get("available_mana", 0)
+
+        if not self.is_playable(available_mana):
             return {"error": "Not enough mana."}
 
-        game_state["available_mana"] -= self.cost
+        game_state["available_mana"] = available_mana - self.cost
 
         return {
             "card_played": self.name,

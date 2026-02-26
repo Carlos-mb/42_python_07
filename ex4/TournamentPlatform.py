@@ -1,35 +1,35 @@
-Gestionar:
+from ex4.TournamentCard import TournamentCard
 
-Registro de cartas
 
-Creación de partidas
+class TournamentPlatform:
 
-Ranking global
+    def __init__(self) -> None:
+        self.registered_cards: dict[str, TournamentCard] = {}
+        self.matches_played: int = 0
+        self._id_counter: int = 1
 
-Reportes
+    def register_card(self, card: TournamentCard) -> str:
+        card_id = f"{card.name.lower().replace(' ', '_')}_{self._id_counter}"
+        self._id_counter += 1
 
-Atributos:
-registered_cards: dict[str, TournamentCard]
-matches_played: int = 0
+        self.registered_cards[card_id] = card
+        return card_id
 
-Class TournamentPlatform
+    def create_match(self, card1_id: str, card2_id: str) -> dict:
 
-    Constructor
-        initialize empty registry dict
-        matches_played = 0
+        card1 = self.registered_cards.get(card1_id)
+        card2 = self.registered_cards.get(card2_id)
 
-    Method register_card(card: TournamentCard) -> str
-        generate unique ID (ex: name_lower + counter)
-        store in registry
-        return generated_id
+        if not card1 or not card2:
+            return {"error": "Invalid card ID"}
 
-    Method create_match(card1_id: str, card2_id: str) -> dict
-
-        get card1 and card2 from registry
-
-        determine winner:
-            simple rule:
-                higher attack wins
+        # Simple rule: higher attack wins
+        if card1.attack_power >= card2.attack_power:
+            winner, loser = card1, card2
+            winner_id, loser_id = card1_id, card2_id
+        else:
+            winner, loser = card2, card1
+            winner_id, loser_id = card2_id, card1_id
 
         winner.update_wins(1)
         loser.update_losses(1)
@@ -37,7 +37,7 @@ Class TournamentPlatform
         winner.calculate_rating()
         loser.calculate_rating()
 
-        matches_played += 1
+        self.matches_played += 1
 
         return {
             "winner": winner_id,
@@ -46,22 +46,40 @@ Class TournamentPlatform
             "loser_rating": loser.rating
         }
 
-    Method get_leaderboard() -> list
+    def get_leaderboard(self) -> list:
 
-        sort registry.values by rating descending
+        sorted_cards = sorted(
+            self.registered_cards.items(),
+            key=lambda item: item[1].rating,
+            reverse=True
+        )
 
-        return ordered list of:
-            name
-            rating
-            record
+        leaderboard = []
 
-    Method generate_tournament_report() -> dict
+        for card_id, card in sorted_cards:
+            leaderboard.append({
+                "id": card_id,
+                "name": card.name,
+                "rating": card.rating,
+                "record": f"{card.wins}-{card.losses}"
+            })
 
-        calculate average rating
+        return leaderboard
+
+    def generate_tournament_report(self) -> dict:
+
+        total_cards = len(self.registered_cards)
+
+        if total_cards == 0:
+            avg_rating = 0
+        else:
+            avg_rating = sum(
+                card.rating for card in self.registered_cards.values()
+            ) // total_cards  # No decimals
 
         return {
-            "total_cards": number of registered cards,
-            "matches_played": matches_played,
-            "avg_rating": computed average,
+            "total_cards": total_cards,
+            "matches_played": self.matches_played,
+            "avg_rating": avg_rating,
             "platform_status": "active"
         }

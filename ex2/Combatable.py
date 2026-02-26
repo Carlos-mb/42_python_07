@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any  # PDF attack() definion vs PDF hint requirement
 
 
 class Combatable(ABC):
@@ -7,7 +8,7 @@ class Combatable(ABC):
     If you want to be 'combatable', you have to implement: """
 
     @abstractmethod
-    def attack(self, target) -> dict:
+    def attack(self, target: Any) -> dict:
         """The PDF says attack(self, target) -> dict:
         and also says:
         • Use type hints for all function signatures and class methods.
