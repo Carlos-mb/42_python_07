@@ -24,10 +24,7 @@ def main() -> None:
     print()
     print("Combat phase:")
 
-    # Crazy thing to meet PDF signatures and expected behaviour
-    # I don't know if it expect a list of string, cards or a single card
-    # Implementation doesn't matter, the exercise objective is the
-    # comprehension of OOP concepts.
+    # This demostrate that any object with method "defend" can be attacked
     class DummyTarget:
         def __init__(self) -> None:
             self.name = "Enemy"
